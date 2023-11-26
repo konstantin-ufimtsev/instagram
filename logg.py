@@ -4,7 +4,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d
     datefmt='[%d.%m.%Y-%H:%M:%S]',
     level=logging.INFO,
     filename="log.log",
-    filemode='a',
+    filemode='w',
     encoding='utf-8'
     )
 
