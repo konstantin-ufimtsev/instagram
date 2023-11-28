@@ -10,15 +10,15 @@ import logg
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import pickle
+from selenium.common.exceptions import NoSuchElementException
 
 class Instagram_Liker:
-    def __init__(self, url:str, hashtag: list):
+    def __init__(self, url:str, hashtag: list): #функция ицициализации основной страницы +хэштэг
         self.url = url
         self.hashtag = hashtag
         logg.logging.info('Инициализация прошла')
 
-
-    def __get_chromedriver(self, use_proxy=False, user_agent=None):
+    def __get_chromedriver(self, use_proxy=False, user_agent=None): #функция создания драйвера
         manifest_json = """
         {
         "version": "1.0.0",
@@ -83,8 +83,7 @@ class Instagram_Liker:
         self.driver = webdriver.Chrome(options=chrome_options)
         logg.logging.info('Драйвер получен')
 
-
-    def __get_url(self):
+    def __get_url(self): #функция также осуществляет авторизацию
 
         self.driver.get(self.url)
         for cookie in pickle.load(open('session', "rb")):
@@ -95,17 +94,45 @@ class Instagram_Liker:
         logg.logging.info(f'URL {self.url} загружен')
         self.driver.refresh()
         
-        time.sleep(20)
-        
         try:
             WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "button[class='_a9-- _ap36 _a9_1']"))).click()
             logg.logging.info('Кнопка отказа от уведомлений нажата')
         except Exception as ex:
             logg.logging.info('Кнопка отказа от уведомлений НЕ НАЖАТА')
-        time.sleep(50)
+        time.sleep(3)
+    
+    def __read_file(self, filename = 'urls.txt') -> list: #функция чтения из файла где хранятся все ссылки которые уже лайкали
+        try:
+            with open(filename, 'r', encoding='utf-8') as file:
+                url_list = []
+                for line in file:
+                    url_list.append(line.rstrip())
+                    
+            logg.logging.info('Чтение списка существующих ссылко успешно')
+            return url_list
+        except Exception as ex:
+            logg.logging.info(f'Ошибка чтения списка суествующих файлов - {ex}')
+       
 
-    #функция заологинивания, не нужна пока работют кукис
+    def __write_file(self, new_urls:list, filename = 'urls.txt'): #функция записи в файл, где хранятся все пролайканные посты
+        try:
+            with open(filename, 'a', encoding='utf-8') as file:
+                for line in new_urls:
+                    file.write(line + '\n')
+            logg.logging.info('Успешная запись в файл urls.txt')
+        except Exception as ex:
+            logg.logging.info('Ошибка записи в файл urls.txt')
+
+    
+
+    def __get_pars_data(self):
+        pass
+        
+        
+
+
+    #функция заологинивания, не нужна пока работет авторизация через кукис
     def __login(self, login = INSTAGRAM_LOGIN, password = INSTAGRAM_PASSWORD):
             try:
                 self.login = login
@@ -146,24 +173,19 @@ class Instagram_Liker:
             except Exception as ex:
                 logg.logging.info(f'Аутенификация НЕ ОСУЩЕСТВЛЕНА - ошибка: {ex}')
 
-    def __close_driver(self):
+    def __close_driver(self): #функция закрытия драйвера
         self.driver.close()
         self.driver.quit()
         logg.logging.info('Драйвер закрыт')
-        
-
-   
-    def parse(self):
+  
+    def parse(self): #основаня функиця парсинга
         self.__get_chromedriver(use_proxy=True, user_agent=None)
         self.__get_url()
-        #self.__login()
         self.__close_driver()
         
-     
-
 
 if __name__ == '__main__':
     
-    Instagram_Liker(url='https://www.instagram.com/', hashtag=['калиниинград',]).parse()
+    Instagram_Liker(url='https://www.instagram.com/explore/locations/2282588742029516/kaliningrad-konigsberg-russia/', hashtag=['калиниинград',]).parse()
 
 
